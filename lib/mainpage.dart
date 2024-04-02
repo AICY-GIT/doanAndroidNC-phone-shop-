@@ -14,7 +14,8 @@ class Mainpage extends StatefulWidget {
 
 class _MainpageState extends State<Mainpage> {
   int _selectedIndex = 0;
-  static const TextStyle optionStyle =TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+  static const TextStyle optionStyle =
+      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static const List<Widget> _widgetOptions = <Widget>[
     HomeWidget(),
     CategoryWidget(),
@@ -35,44 +36,52 @@ class _MainpageState extends State<Mainpage> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight + 20.0), // Add 10dp to the standard toolbar height
-          child: Column(
-            children: [
-              const SizedBox(height: 20), // Add 10dp of space above the AppBar
-              AppBar(
-                actions: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search...',
-                          prefixIcon: Icon(Icons.search),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+          preferredSize: const Size.fromHeight(
+              kToolbarHeight + 40.0), // Add 20dp to the standard toolbar height
+          child: SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 20), // Add 20 pixels of space above the AppBar
+                AppBar(
+                  actions: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Search...',
+                            prefixIcon: Icon(Icons.search),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      // Add your shopping cart action here
-                    },
-                    icon: const Icon(Icons.shopping_cart,size:40,),
-                  ),
-                ],
-              ),
-            ],
+                    IconButton(
+                      onPressed: () {
+                        // Add your shopping cart action here
+                      },
+                      icon: const Icon(
+                        Icons.shopping_cart,
+                        size: 40,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10), 
+              ],
+            ),
           ),
         ),
         body: Center(
           child: _widgetOptions.elementAt(_selectedIndex),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Colors.grey[800], // Set background color to darker gray
+          backgroundColor:
+              Colors.grey[800], // Set background color to darker gray
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home,
@@ -98,7 +107,6 @@ class _MainpageState extends State<Mainpage> {
               icon: Icon(Icons.people_outline,
                   color: Colors.black), // Set icon color to black
               label: 'User',
-              
             ),
           ],
           currentIndex: _selectedIndex,
