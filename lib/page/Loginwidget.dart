@@ -1,6 +1,7 @@
 import 'package:buoi4/main.dart';
 import 'package:buoi4/mainpage.dart';
 import 'package:flutter/material.dart';
+import 'registerwidget.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({Key? key}) : super(key: key);
@@ -36,7 +37,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _emailController,
-                     decoration: const InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Email',
                       border: OutlineInputBorder(),
                     ),
@@ -72,14 +73,17 @@ class _LoginWidgetState extends State<LoginWidget> {
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.black),
-                      padding:EdgeInsets.symmetric(vertical: 12, horizontal: 50),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.black),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 12, horizontal: 50),
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (context) => const Mainpage()));
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const Mainpage()));
                       }
                     },
                     child: const Text('Login'),
@@ -87,10 +91,13 @@ class _LoginWidgetState extends State<LoginWidget> {
                   const SizedBox(height: 20),
                   GestureDetector(
                     onTap: () {
-                      // Navigate to the sign-up page
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const RegisterWidget()));
                     },
-                    child:const  Text(
-                      'Don\'t have an account? Sign up here',
+                    child: const Text(
+                      'Don\'t have an account? Sign up here!',
                       style: TextStyle(
                         color: Colors.blue,
                         decoration: TextDecoration.underline,
