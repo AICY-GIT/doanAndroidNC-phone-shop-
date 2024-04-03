@@ -1,6 +1,6 @@
 import 'package:buoi4/conf/const.dart';
 import 'package:flutter/material.dart';
-import 'Loginwidget.dart';
+import 'loginwidget.dart';
 
 class UserWidget extends StatelessWidget {
   const UserWidget({super.key});
@@ -105,7 +105,7 @@ class UserWidget extends StatelessWidget {
                   size: 30,
                 ), // Phone icon
               ),
-              Text('Giỏ hàng',
+              Text('Shopping cart',
                   style: TextStyle(color: Colors.black, fontSize: 20)),
             ],
           ),
@@ -126,7 +126,7 @@ class UserWidget extends StatelessWidget {
                   size: 30,
                 ), // Phone icon
               ),
-              Text('Đơn hàng',
+              Text('Order',
                   style: TextStyle(color: Colors.black, fontSize: 20)),
             ],
           ),
@@ -147,7 +147,7 @@ class UserWidget extends StatelessWidget {
                   size: 30,
                 ), // Phone icon
               ),
-              Text('Thay đổi thông tin',
+              Text('Change User info',
                   style: TextStyle(color: Colors.black, fontSize: 20)),
             ],
           ),
