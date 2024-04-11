@@ -151,6 +151,7 @@ class UserWidget extends StatelessWidget {
                   style: TextStyle(color: Colors.black, fontSize: 20)),
             ],
           ),
+          
           const Divider(
             indent: 30,
             endIndent: 30,
