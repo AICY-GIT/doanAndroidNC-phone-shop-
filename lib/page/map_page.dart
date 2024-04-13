@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:buoi4/conf/const.dart';
 
 class mapPage extends StatefulWidget {
   const mapPage({Key? key}) : super(key: key);
@@ -155,7 +156,7 @@ class _mapPageState extends State<mapPage> {
     PolylinePoints polylinePoints = PolylinePoints();
     PolylineResult polylineResult =
         await polylinePoints.getRouteBetweenCoordinates(
-      "AIzaSyBuUQXoeB0qP0Amvis2IOivctJGOv59Bw8",
+      googleMapsApiKey,
       PointLatLng(_currentPosition!.latitude, _currentPosition!.longitude),
       PointLatLng(closestShop!.latitude, closestShop!.longitude),
       travelMode: TravelMode.walking,
