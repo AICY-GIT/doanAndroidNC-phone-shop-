@@ -1,19 +1,41 @@
 import 'package:buoi4/mainpage.dart';
+import 'package:buoi4/page/admin/providers/theme_provider.dart';
+import 'package:buoi4/page/admin/screens/dashboard_screen.dart';
+import 'package:buoi4/page/admin/screens/edit_upload_product_form.dart';
+import 'package:buoi4/page/admin/screens/inner_screens/orders/orders_screen.dart';
+import 'package:buoi4/page/admin/screens/search_screen.dart';
+import 'package:buoi4/root_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ThemeProvider>(
+          create: (_) => ThemeProvider(),
+        ),
+        // Các Provider khác nếu cần
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Mainpage(),
+      home: RootPage(),
+      routes: {
+        OrdersScreenFree.routeName: (context) => const OrdersScreenFree(),
+        SearchScreen.routeName: (context) => const SearchScreen(),
+        EditOrUploadProductScreen.routeName: (context) => const EditOrUploadProductScreen(),
+      },
     );
   }
 }
+

@@ -1,5 +1,6 @@
 import 'package:buoi4/main.dart';
 import 'package:buoi4/mainpage.dart';
+import 'package:buoi4/root_page.dart';
 import 'package:flutter/material.dart';
 import 'registerwidget.dart';
 
@@ -85,7 +86,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const Mainpage()));
+                                  builder: (context) => const RootPage()));
                         }
                       },
                       child: const Text('Login'),

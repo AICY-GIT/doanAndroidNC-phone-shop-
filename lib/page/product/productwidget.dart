@@ -14,7 +14,7 @@ class ProductWidget extends StatefulWidget {
 class _ProductWidgetState extends State<ProductWidget> {
   List<Product> lstProduct = [];
   List<Product> lstEarPhone = [];
-  List<Product> lstAccessory = [];
+  List<Product> lstAccessory = [];  
 
   @override
   void initState() {

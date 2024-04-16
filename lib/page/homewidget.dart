@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, unused_import
+
 import 'package:flutter/material.dart';
 import 'package:buoi4/page/product/detail_page.dart';
 import 'package:buoi4/page/product/detail_earphones.dart';
