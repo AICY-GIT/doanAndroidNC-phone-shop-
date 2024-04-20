@@ -29,7 +29,7 @@ class Phone {
   static List<Phone> phoneList = [
     Phone(
         phoneId: 0,
-         price: 1398,
+        price: 1398,
         category: 'Apple',
         phoneName: 'Iphone 15 Pro Max',
         size: '1TB',

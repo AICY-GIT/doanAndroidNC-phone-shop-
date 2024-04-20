@@ -43,14 +43,14 @@ class _FavoritePageState extends State<FavWidget> {
           : Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 30),
               height: size.height * .5,
-              child: ListView.builder(
-                  itemCount: widget.favoritedPhone.length,
-                  scrollDirection: Axis.vertical,
-                  physics: const BouncingScrollPhysics(),
-                  itemBuilder: (BuildContext context, int index) {
-                    return PhoneWidget(
-                        index: index, phoneList: widget.favoritedPhone);
-                  }),
+            //   child: ListView.builder(
+            //       itemCount: widget.favoritedPhone.length,
+            //       scrollDirection: Axis.vertical,
+            //       physics: const BouncingScrollPhysics(),
+            //       // itemBuilder: (BuildContext context, int index) {
+            //       //   return PhoneWidget(
+            //       //       index: index, phoneList: widget.favoritedPhone);
+            //       // }),
             ),
     );
   }

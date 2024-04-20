@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 
 class RootPage extends StatefulWidget {
+        static const routeName = '/root';
+
   const RootPage({Key? key}) : super(key: key);
 
   @override
@@ -28,7 +30,7 @@ class _RootPageState extends State<RootPage> {
     return [
       const HomeWidget(),
       FavWidget(favoritedPhone: favorites,),
-      CartWidget(addedToCartPhones: myCart,),
+      CartWidget(),
       const UserWidget(),
     ];
   }
@@ -53,17 +55,17 @@ class _RootPageState extends State<RootPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(titleList[_bottomNavIndex], style: TextStyle(
-              color: Constants.blackColor,
-              fontWeight: FontWeight.w500,
-              fontSize: 24,
-            ),),
-            Icon(Icons.notifications, color: Constants.blackColor, size: 30.0,)
-          ],
-        ),
+        // title: Row(
+        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //   children: [
+        //     // Text(titleList[_bottomNavIndex], style: TextStyle(
+        //     //   color: Constants.blackColor,
+        //     //   fontWeight: FontWeight.w500,
+        //     //   fontSize: 24,
+        //     // ),),
+        //     // Icon(Icons.notifications, color: Constants.blackColor, size: 30.0,)
+        //   ],
+        // ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0.0,
       ),

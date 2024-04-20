@@ -1,383 +1,297 @@
+// import các gói cần thiết
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:buoi4/models/constants.dart';
-import 'package:buoi4/models/phones.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-class DetailPage extends StatefulWidget {
-  final int phoneId;
-  const DetailPage({Key? key, required this.phoneId}) : super(key: key);
+class DetailPage extends StatelessWidget {
+    final String group; // Nhóm sản phẩm (phone hoặc earphone)
+    final String productId; // ID của sản phẩm
 
-  @override
-  State<DetailPage> createState() => _DetailPageState();
-}
+    const DetailPage({required this.group, required this.productId, Key? key}) : super(key: key);
 
-class _DetailPageState extends State<DetailPage> {
-  //Toggle Favorite button
-  bool toggleIsFavorated(bool isFavorited) {
-    return !isFavorited;
-  }
+    @override
+    Widget build(BuildContext context) {
+        // Sử dụng group và productId để truy cập đường dẫn đúng
+        final DatabaseReference productRef = FirebaseDatabase.instance.ref().child('products').child(group).child(productId);
 
-  //Toggle add remove from cart
-  bool toggleIsSelected(bool isSelected) {
-    return !isSelected;
-  }
+        // Sử dụng StreamBuilder để lắng nghe thay đổi dữ liệu sản phẩm
+        return StreamBuilder<DatabaseEvent>(
+            stream: productRef.onValue,
+            builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-  @override
-  Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    List<Phone> phoneList = Phone.phoneList;
-    return Scaffold(
-      // backgroundColor:Color.fromRGBO(245, 241, 228, 1),
-      body: SingleChildScrollView(
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          child: Stack(
-            children: [
-              Positioned(
-                top: 50,
-                left: 20,
-                right: 20,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        height: 40,
-                        width: 40,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          color: Constants.primaryColor.withOpacity(.15),
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          color: Constants.blackColor,
-                        ),
-                      ),
+                // Kiểm tra dữ liệu sản phẩm
+                if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+                    return const Center(child: Text('No product found.'));
+                }
+
+                // Lấy dữ liệu sản phẩm và ép kiểu an toàn
+                final productData = snapshot.data?.snapshot.value as Map<dynamic, dynamic>?;
+
+                if (productData == null) {
+                    return const Center(child: Text('No product found.'));
+                }
+
+                // Chuyển đổi kiểu dữ liệu từ Map<dynamic, dynamic> thành Map<String, dynamic>
+                final productMap = productData.map((key, value) => MapEntry<String, dynamic>(key.toString(), value as dynamic));
+
+                // Kiểm tra các thuộc tính của sản phẩm trước khi sử dụng
+                final name = productMap['phoneName'] as String? ?? 'No name';
+                final price = productMap['price'] as num? ?? 0;
+                final category = productMap['category'] as String? ?? 'No category';
+                final imageUrl = productMap['imageURL'] as String? ?? '';
+                final description = productMap['description'] as String? ?? 'No description';
+                final rating = productMap['rating'] as num? ?? 0;
+                final color = productMap['color'] as String? ?? 'No color';
+                final size = productMap['size'] as String? ?? 'No size';
+                final state = 'wait'; // Trạng thái của sản phẩm là "wait"
+                
+                // Xử lý thuộc tính batteryCapacity
+                num? batteryCapacity;
+                final batteryCapacityValue = productMap['batteryCapacity'];
+                if (batteryCapacityValue is num) {
+                    batteryCapacity = batteryCapacityValue;
+                } else if (batteryCapacityValue is String) {
+                    batteryCapacity = num.tryParse(batteryCapacityValue);
+                } else {
+                    batteryCapacity = null;
+                }
+
+                // Hiển thị thông tin sản phẩm trong giao diện
+                return Scaffold(
+                    appBar: AppBar(
+                        title: Text(name),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        debugPrint('favorite');
-                      },
-                      child: Container(
-                        height: 40,
-                        width: 40,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          color: Constants.primaryColor.withOpacity(.15),
-                        ),
-                        child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                bool isFavorited = toggleIsFavorated(
-                                    phoneList[widget.phoneId].isFavorated);
-                                phoneList[widget.phoneId].isFavorated =
-                                    isFavorited;
-                              });
-                            },
-                            icon: Icon(
-                              phoneList[widget.phoneId].isFavorated == true
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: Color.fromARGB(255, 255, 0, 0),
-                            )),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: 50,
-                left: 20,
-                right: 20,
-                child: Container(
-                  width: size.width * .8,
-                  height: size.height * .8,
-                  padding: const EdgeInsets.all(20),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: 30,
-                        left: 0,
-                        child: SizedBox(
-                          height: 150,
-                          width: 150,
-                          child: Image.asset(
-                            phoneList[widget.phoneId].imageURL,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 10,
-                        right: 0,
-                        child: SizedBox(
-                          height: 140,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              PlantFeature(
-                                title: 'Storage capacity',
-                                plantFeature: phoneList[widget.phoneId].size,
-                              ),
-                              PlantFeature(
-                                title: 'Color',
-                                plantFeature:
-                                    phoneList[widget.phoneId].color.toString(),
-                              ),
-                              PlantFeature(
-                                title: 'Battery Capacity',
-                                plantFeature:
-                                    phoneList[widget.phoneId].batterycapacity,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 270,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'Review Video',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 300,
-                left: 20,
-                right: 20,
-                child: Stack(
-                  children: [
-                    Container(
-                      height: 210,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Colors.black, width: 2), // Add border
-                      ),
-                      child: YoutubePlayer(
-                        controller: YoutubePlayerController(
-                          initialVideoId: 'aNEtlMSCiCI',
-                          flags: const YoutubePlayerFlags(
-                            autoPlay: false,
-                            mute: false,
-                          ),
-                        ),
-                        showVideoProgressIndicator: true,
-                        progressIndicatorColor: Colors.red,
-                        progressColors: const ProgressBarColors(
-                          playedColor: Colors.red,
-                          handleColor: Colors.red,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.only(top: 20, left: 30, right: 30),
-                  height: size.height * .35,
-                  width: size.width,
-                  decoration: BoxDecoration(
-                    color: Constants.primaryColor.withOpacity(.4),
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(30),
-                      topLeft: Radius.circular(30),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                    body: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  phoneList[widget.phoneId].phoneName,
-                                  softWrap: true,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2, // Giới hạn số dòng là 2
-                                  style: const TextStyle(
-                                    color: Color.fromARGB(255, 38, 0, 0),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30.0,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                  r'$' +
-                                      phoneList[widget.phoneId]
-                                          .price
-                                          .toString(),
-                                  style: TextStyle(
-                                    color: Color.fromARGB(255, 38, 0, 0),
-                                    fontSize: 24.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                          const SizedBox(height: 30),
+                            // Row chứa hình ảnh và thông tin size, color, batteryCapacity
+                            Row(
+                            
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                    // Hiển thị hình ảnh sản phẩm bên trái
+                                    if (imageUrl.isNotEmpty)
+                                        Padding(
+                                            padding: const EdgeInsets.only(left: 30.0 , top: 20.0),
+                                          
+
+                                            child: Image.network(
+                                                imageUrl,
+                                                width: 150, // Đặt chiều rộng mong muốn cho ảnh
+                                                height: 200, // Đặt chiều cao mong muốn cho ảnh
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                    return const Icon(Icons.error);
+                                                },
+                                            ),
+                                        ),
+                                    const SizedBox(width: 16),
+                                    // Hiển thị size, color, và batteryCapacity bên phải bức ảnh
+                                    Padding(
+                                        padding: const EdgeInsets.only(left: 20.0),
+                                        child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                                Text(
+                                                    'Storage Capacity',
+                                                    style: TextStyle(
+                                                        fontWeight: FontWeight.normal,
+                                                        color: Color.fromARGB(255, 49, 47, 47),
+                                                      fontSize: 20,
+                                                    ),
+                                                ),
+                                                Text(
+                                                    ' ${size}',
+                                                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                                        fontSize: 20.0,
+                                                    ),
+                                                ),
+                                                const SizedBox(height: 20),
+                                                Text(
+                                                    'Color',
+                                                    style: TextStyle(
+                                                        fontWeight: FontWeight.normal,
+                                                       color: Color.fromARGB(255, 49, 47, 47),
+                                                      fontSize: 20,
+                                                    ),
+                                                ),
+                                               Text(
+                                                    ' ${color}',
+                                                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                                        fontSize: 20.0,
+                                                    ),
+                                                ),
+                                                const SizedBox(height: 20),
+                                                Text(
+                                                    'Battery Capacity',
+                                                    style: TextStyle(
+                                                        fontWeight: FontWeight.normal,
+                                                        color: Color.fromARGB(255, 49, 47, 47),
+                                                      fontSize: 20,
+                                                    ),
+                                                ),
+                                                Text(
+                                                    '${batteryCapacity} mAh',
+                                                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                                        fontSize: 20.0,
+                                                    ),
+                                                ),
+                                            ],
+                                        ),
+                                    ),
+                                ],
                             ),
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                phoneList[widget.phoneId].rating.toString(),
-                                style: TextStyle(
-                                  fontSize: 30.0,
-                                  color: Constants.blackColor,
-                                ),
-                              ),
-                              Icon(
-                                Icons.star,
-                                size: 30.0,
-                                color: Constants.blackColor,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      Expanded(
-                        child: Text(
-                          phoneList[widget.phoneId].decription,
-                          textAlign: TextAlign.justify,
-                          style: TextStyle(
-                            height: 1.5,
-                            fontSize: 18,
-                            color: Constants.blackColor.withOpacity(.7),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: SizedBox(
-        width: size.width * .9,
-        height: 50,
-        child: Row(
-          children: [
-            Container(
-              height: 50,
-              width: 50,
-              decoration: BoxDecoration(
-                  color: phoneList[widget.phoneId].isSelected == true
-                      ? Constants.primaryColor.withOpacity(.5)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(50),
-                  boxShadow: [
-                    BoxShadow(
-                      offset: const Offset(0, 1),
-                      blurRadius: 5,
-                      color: Constants.primaryColor.withOpacity(.3),
-                    ),
-                  ]),
-              child: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      bool isSelected = toggleIsSelected(
-                          phoneList[widget.phoneId].isSelected);
+                          const SizedBox(height: 70),
+                            // Expanded chứa các thông tin sản phẩm còn lại, kéo dài xuống dưới cùng của màn hình
+                            Expanded(
+                                child: Container(
+                                    padding: EdgeInsets.zero, // Không padding để khung sát viền
+                                    margin: EdgeInsets.zero, // Không margin để khung sát viền
+                                    decoration: BoxDecoration(
+                                        color: Color.fromARGB(255, 198, 218, 236),
+                                         borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(28), // Bo tròn góc trên trái
+                                            topRight: Radius.circular(28), // Bo tròn góc trên phải
+                                        ),
+                                    ),
+                                    width: double.infinity, // Khung kéo dài hết chiều rộng của màn hình
+                                    child: SingleChildScrollView(
+                                      
+                                        child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                                const SizedBox(height: 50.0),
+                                                Padding(
+                                                    padding: const EdgeInsets.only(left: 20.0),
+                                                    child: Text(
+                                                        name,
+                                                        style: Theme.of(context).textTheme.headline5?.copyWith(
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 30,
+                                                        ),
+                                                    ),
+                                                ),
 
-                      phoneList[widget.phoneId].isSelected = isSelected;
-                    });
-                  },
-                  icon: Icon(
-                    Icons.shopping_cart,
-                    color: phoneList[widget.phoneId].isSelected == true
-                        ? Colors.white
-                        : Constants.primaryColor,
-                  )),
-            ),
-            const SizedBox(
-              width: 20,
-            ),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                    color: Constants.primaryColor,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        offset: const Offset(0, 1),
-                        blurRadius: 5,
-                        color: Constants.primaryColor.withOpacity(.3),
-                      )
-                    ]),
-                child: const Center(
-                  child: Text(
-                    'BUY NOW',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+                                                const SizedBox(height: 10),
+                                                Padding(
+                                                    padding: const EdgeInsets.only(left: 20.0),
+                                                    child: Text(
+                                                        '\$${price}',
+                                                        style: TextStyle(
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 30,
+                                                            color: Colors.black,
+                                                        ),
+                                                    ),
+                                                ),
+                                                
+                                                const SizedBox(height: 10),
+                                                Padding(
+                                                    padding: const EdgeInsets.only(left: 20.0),
+                                                    child: Text(
+                                                        description,
+                                                        style: TextStyle(
+                                                            fontSize: 25.0,
+                                                        ),
+                                                    ),
+                                                ),
+                                                
+                                                const SizedBox(height: 150), // Thêm khoảng cách sau thông tin mô tả
+
+                                                // Row chứa biểu tượng thêm vào giỏ hàng và nút "Buy Now"
+                                                Row(
+                                                    children: [
+                                                        const SizedBox(width: 20),
+
+                                                        // Biểu tượng thêm vào giỏ hàng
+                                                        IconButton(
+                                                            icon: Icon(Icons.add_shopping_cart),
+                                                            color: Colors.black,
+                                                            iconSize: 40,
+                                                            onPressed: () async {
+                                                               // Lấy UID của người dùng đã đăng nhập
+final uid = FirebaseAuth.instance.currentUser?.uid;
+
+if (uid != null) {
+    // Tạo tham chiếu đến giỏ hàng của người dùng
+    final cartRef = FirebaseDatabase.instance.ref().child('carts').child(uid);
+
+    // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng hay chưa
+    final event = await cartRef.child(productId).once();
+    final cartSnapshot = event.snapshot;
+
+    if (cartSnapshot.exists) {
+        // Lấy giá trị từ DataSnapshot
+        final value = cartSnapshot.value;
+
+        // Kiểm tra nếu value không phải là null và chứa thuộc tính 'quantity'
+        if (value != null && value is Map && value.containsKey('quantity')) {
+            // Lấy số lượng hiện tại của sản phẩm
+            final currentQuantity = value['quantity'] as int;
+            
+            // Tăng số lượng sản phẩm
+            final newQuantity = currentQuantity + 1;
+            await cartRef.child(productId).update({
+                'quantity': newQuantity,
+            });
+        }
+    } else {
+        // Sản phẩm chưa tồn tại trong giỏ hàng, thêm sản phẩm mới
+        await cartRef.child(productId).set({
+            'name': name,
+            'price': price,
+            'category': category,
+            'imageURL': imageUrl,
+            'description': description,
+            'rating': rating,
+            'color': color,
+            'size': size,
+            'state': 'wait',
+            'batteryCapacity': batteryCapacity,
+            'group': group,
+            'quantity': 1, // Số lượng ban đầu là 1
+        });
+    }
 }
-
-class PlantFeature extends StatelessWidget {
-  final String plantFeature;
-  final String title;
-  const PlantFeature({
-    Key? key,
-    required this.plantFeature,
-    required this.title,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: Constants.blackColor,
-          ),
+ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('$name đã được thêm vào giỏ hàng.'),
+            duration: Duration(seconds: 2), // Thời gian hiển thị SnackBar (2 giây)
         ),
-        Text(
-          plantFeature,
-          style: TextStyle(
-            color: Color.fromARGB(255, 38, 0, 0),
-            fontSize: 18.0,
-            fontWeight: FontWeight.bold,
-          ),
-        )
-      ],
     );
-  }
+                                                            },
+                                                        ),
+                                                        const SizedBox(width: 50),
+
+                                                        // Nút "Buy Now"
+                                                        ElevatedButton(
+                                                            onPressed: () {
+                                                                // Thêm chức năng khi nút được nhấp
+                                                                print('Buy Now');
+                                                            },
+                                                            child: Text('Buy Now'),
+                                                            style: ElevatedButton.styleFrom(
+                                                                minimumSize: Size(250, 40),
+                                                            ),
+                                                        ),
+                                                    ],
+                                                ),
+                                            ],
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ],
+                    ),
+                );
+            },
+        );
+    }
 }

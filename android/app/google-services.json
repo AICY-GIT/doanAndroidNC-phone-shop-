@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1067021180503",
+    "project_id": "fullterapp-1204",
+    "storage_bucket": "fullterapp-1204.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1067021180503:android:12666115cac0ab13fe4d12",
+        "android_client_info": {
+          "package_name": "com.example.buoi4"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHDCkVGRdVDb4KHL0NVJASdYVWDjNE7-Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
