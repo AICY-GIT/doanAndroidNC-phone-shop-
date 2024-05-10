@@ -4,8 +4,10 @@ import 'package:buoi4/page/admin/HomeAdmin.dart';
 import 'package:buoi4/page/admin/edit_upload_product_form.dart';
 import 'package:buoi4/page/admin/editproducts.dart';
 import 'package:buoi4/page/admin/listproduct.dart';
+import 'package:buoi4/page/admin/oders_admin.dart';
 import 'package:buoi4/page/homewidget.dart';
 import 'package:buoi4/page/product/checkout.dart';
+import 'package:buoi4/page/product/odersstatus.dart';
 import 'package:buoi4/page/user/Loginwidget.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +46,11 @@ class MyApp extends StatelessWidget {
                 EditProductsScreen.routeName: (context) => const EditProductsScreen( productKey: '', group: '',),
                 HomeWidget.routeName:(context) => HomeWidget(),
                 CheckoutPage.routeName: (context) =>  CheckoutPage(),
-                                RootPage.routeName:(context) => RootPage(),
+                OrderStatusPage.routeName: (context) =>  OrderStatusPage(),
+
+                 RootPage.routeName:(context) => RootPage(),
+                OrdersAdminPage.routeName: (context) => const OrdersAdminPage(),
+
 
 
             },

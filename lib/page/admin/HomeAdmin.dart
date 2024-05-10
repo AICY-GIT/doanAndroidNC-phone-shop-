@@ -40,7 +40,7 @@ class HomeAdmin extends StatelessWidget {
               icon: Icons.list_alt,
               onTap: () {
                 // Xử lý chuyển hướng đến trang quản lý đơn hàng
-                Navigator.pushNamed(context, '/orders');
+                Navigator.pushNamed(context, '/ordersAdmin');
               },
             ),
              _buildAdminCard(

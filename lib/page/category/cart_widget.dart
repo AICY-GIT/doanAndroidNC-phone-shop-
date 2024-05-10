@@ -79,64 +79,73 @@ class CartWidget extends StatelessWidget {
                     children: [
                         Expanded(
                             child: ListView.builder(
-                                itemCount: waitProducts.length,
-                                itemBuilder: (context, index) {
-                                    final product = waitProducts[index];
-                                    final name = product['name'] as String?;
-                                    final price = product['price'] as num?;
-                                    final quantity = product['quantity'] as int? ?? 1; // Số lượng sản phẩm, mặc định là 1
-                                    final imageUrl = product['imageURL'] as String?;
-                                    final productKey = product['key'] as String; // Lấy khóa của sản phẩm
+    itemCount: waitProducts.length,
+    itemBuilder: (context, index) {
+        final product = waitProducts[index];
+        final name = product['name'] as String?;
+        final price = product['price'] as num?;
+        final quantity = product['quantity'] as int? ?? 1; // Số lượng sản phẩm, mặc định là 1
+        final imageUrl = product['imageURL'] as String?;
+        final productKey = product['key'] as String; // Lấy khóa của sản phẩm
+        
+        // Tính tổng giá của sản phẩm (giá x số lượng)
+        final totalProductPrice = price != null ? (price * quantity).round() : 0;
 
-                                    return Card(
-                                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), // Đặt margin cho Card
-                                        child: ListTile(
-                                            leading: Image.network(
-                                                imageUrl ?? '',
-                                                width: 50,
-                                                height: 50,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) {
-                                                    return const Icon(Icons.error);
-                                                },
-                                            ),
-                                            title: Text(name ?? 'No name'),
-                                            subtitle: Text('\$${price?.toStringAsFixed(2)} x $quantity'),
-                                            trailing: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                    // Nút giảm số lượng
-                                                    IconButton(
-                                                        icon: Icon(Icons.remove),
-                                                        onPressed: () {
-                                                            // Giảm số lượng sản phẩm
-                                                            if (quantity > 1) {
-                                                                cartRef
-                                                                    .child(productKey)
-                                                                    .child('quantity')
-                                                                    .set(quantity - 1);
-                                                            }
-                                                        },
-                                                    ),
-                                                    // Hiển thị số lượng sản phẩm
-                                                    Text(quantity.toString()),
-                                                    // Nút tăng số lượng
-                                                    IconButton(
-                                                        icon: Icon(Icons.add),
-                                                        onPressed: () {
-                                                            // Tăng số lượng sản phẩm
-                                                            cartRef
-                                                                .child(productKey)
-                                                                .child('quantity')
-                                                                .set(quantity + 1);
-                                                        },
-                                                    ),
-                                                ],
-                                            ),
-                                        ),
-                                    );
-                                },
-                            ),
+        return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            child: ListTile(
+                leading: Image.network(
+                    imageUrl ?? '',
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.error);
+                    },
+                ),
+                title: Text(name ?? 'No name'),
+                // Hiển thị giá đơn sản phẩm, số lượng, và tổng giá của sản phẩm (đã làm tròn)
+                subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                        Text('\$${price?.toStringAsFixed(2)} x $quantity'),
+                        Text('Total: \$${totalProductPrice}'),
+                    ],
+                ),
+                trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                        // Nút giảm số lượng
+                        IconButton(
+                            icon: Icon(Icons.remove),
+                            onPressed: () {
+                                // Giảm số lượng sản phẩm
+                                if (quantity > 1) {
+                                    cartRef.child(productKey)
+                                        .child('quantity')
+                                        .set(quantity - 1);
+                                }
+                            },
+                        ),
+                        // Hiển thị số lượng sản phẩm
+                        Text(quantity.toString()),
+                        // Nút tăng số lượng
+                        IconButton(
+                            icon: Icon(Icons.add),
+                            onPressed: () {
+                                // Tăng số lượng sản phẩm
+                                cartRef.child(productKey)
+                                    .child('quantity')
+                                    .set(quantity + 1);
+                            },
+                        ),
+                    ],
+                ),
+            ),
+        );
+    },
+)
+
                         ),
                        // Hiển thị ô tổng giá và nút thanh toán cạnh nhau
                         Padding(

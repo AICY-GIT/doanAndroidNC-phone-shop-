@@ -79,7 +79,6 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
             _sizeValue = productData['size'] ?? '';
             _colorValue = productData['color'] ?? '';
             _imageURL = productData['imageURL'] ?? '';
-
             // Cập nhật giao diện
             setState(() {});
         });

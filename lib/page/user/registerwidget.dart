@@ -396,6 +396,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
       'dateofbirth': '',
       'gender': '',
       'phone': '',
+      'imagesusser': '',
       'address': '',
       'role': 'user',
     });

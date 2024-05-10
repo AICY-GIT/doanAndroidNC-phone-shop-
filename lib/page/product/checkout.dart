@@ -69,18 +69,22 @@ void _handleCheckout() async {
 
     // Đặt dữ liệu đơn hàng vào Firebase
 final orderRef = FirebaseDatabase.instance.ref().child('orders').child(uid).push();
-    final orderData = {
-        'user_id': uid,
-        'phone': phone,
-        'address': address,
-        'totalProductCost': _totalProductCost,
-        'shippingCost': _shippingCost,
-        'totalOrderCost': _totalOrderCost,
-        'deliveryMethod': _selectedDeliveryMethod,
-        'waitProducts': waitProducts,
-        'orderDate': DateTime.now().toIso8601String(),
-    };
-    await orderRef.set(orderData);
+final orderId = orderRef.key;  // Lấy order_id từ khóa tham chiếu được tạo
+final orderData = {
+    'order_id': orderId,  // Lưu order_id trong dữ liệu đơn hàng
+    'user_id': uid,
+    'phone': phone,
+    'address': address,
+    'status': 'not_yet_approved',
+    'totalProductCost': _totalProductCost,
+    'shippingCost': _shippingCost,
+    'totalOrderCost': _totalOrderCost,
+    'deliveryMethod': _selectedDeliveryMethod,
+    'waitProducts': waitProducts,
+    'orderDate': DateTime.now().toIso8601String(),
+};
+await orderRef.set(orderData);
+
 
     // Cập nhật trạng thái sản phẩm trong giỏ hàng và xóa khỏi carts
     final cartRef = FirebaseDatabase.instance.ref().child('carts').child(uid);
@@ -244,34 +248,41 @@ final orderRef = FirebaseDatabase.instance.ref().child('orders').child(uid).push
                                     SizedBox(height: 10),
                                     // Product List View
                                     ListView.builder(
-                                        shrinkWrap: true, // This allows ListView to adjust its height
-                                        physics: NeverScrollableScrollPhysics(), // Prevent scrolling within ListView
-                                        itemCount: waitProducts.length,
-                                        itemBuilder: (context, index) {
-                                            final product = waitProducts[index];
-                                            final name = product['name'] as String?;
-                                            final price = product['price'] as num?;
-                                            final quantity = product['quantity'] as int? ?? 1;
-                                            final imageUrl = product['imageURL'] as String?;
+    shrinkWrap: true, // Cho phép ListView tự điều chỉnh chiều cao
+    physics: NeverScrollableScrollPhysics(), // Ngăn chặn cuộn trong ListView
+    itemCount: waitProducts.length,
+    itemBuilder: (context, index) {
+        final product = waitProducts[index];
+        final name = product['name'] as String?;
+        final price = product['price'] as num?;
+        final quantity = product['quantity'] as int? ?? 1;
+        final imageUrl = product['imageURL'] as String?;
 
-                                            return Card(
-                                                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                                child: ListTile(
-                                                    leading: Image.network(
-                                                        imageUrl ?? '',
-                                                        width: 50,
-                                                        height: 50,
-                                                        fit: BoxFit.cover,
-                                                        errorBuilder: (context, error, stackTrace) {
-                                                            return const Icon(Icons.error);
-                                                        },
-                                                    ),
-                                                    title: Text(name ?? 'No name'),
-                                                    subtitle: Text('\$${price?.toStringAsFixed(2)} x $quantity'),
-                                                ),
-                                            );
-                                        },
-                                    ),
+        // Tính tổng giá của mỗi sản phẩm
+        final productTotal = (price != null ? price * quantity : 0).round();
+
+        return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            child: ListTile(
+                leading: Image.network(
+                    imageUrl ?? '',
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.error);
+                    },
+                ),
+                title: Text(name ?? 'No name'),
+                // Hiển thị giá đơn sản phẩm, số lượng, và tổng giá của sản phẩm (đã làm tròn)
+                subtitle: Text(
+                    '\$${price?.toStringAsFixed(2)} x $quantity\nTotal: \$${productTotal}',
+                ),
+            ),
+        );
+    },
+),
+
                                     Padding(
                                         padding: const EdgeInsets.all(10),
                                         child: Card(
