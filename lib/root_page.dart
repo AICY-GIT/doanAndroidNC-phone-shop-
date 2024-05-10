@@ -73,33 +73,58 @@ class _RootPageState extends State<RootPage> {
         index: _bottomNavIndex,
         children: _widgetOptions(),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          Navigator.push(context, PageTransition(child: const HomeWidget(), type: PageTransitionType.bottomToTop));
-        },
-        child: Image.asset('assets/images/code-scan-two.png', height: 30.0,),
-        backgroundColor: Constants.primaryColor,
-      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: AnimatedBottomNavigationBar(
-        splashColor: Constants.primaryColor,
-        activeColor: Constants.primaryColor,
-        inactiveColor: Colors.black.withOpacity(.5),
-        icons: iconList,
-        activeIndex: _bottomNavIndex,
-        gapLocation: GapLocation.center,
-        notchSmoothness: NotchSmoothness.softEdge,
-        onTap: (index){
-          setState(() {
-            _bottomNavIndex = index;
-            final List<Phone> favoritedPhone = Phone.getFavoritedPhone();
-            final List<Phone> addedToCartPhones = Phone.addedToCartPhones();
+     bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(30),
+            topLeft: Radius.circular(30),
+          ),
+          boxShadow: [
+            BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 10),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+          child: BottomNavigationBar(
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                label: 'History',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shop),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: 'User',
+              ),
+            ],
+            currentIndex: _bottomNavIndex,
+            selectedItemColor: Constants.primaryColor,
+            unselectedItemColor: Colors.black.withOpacity(.5),
+            onTap: (index) {
+              setState(() {
+                _bottomNavIndex = index;
+                final List<Phone> favoritedPhone = Phone.getFavoritedPhone();
+                final List<Phone> addedToCartPhones = Phone.addedToCartPhones();
 
-            favorites = favoritedPhone;
-            myCart = addedToCartPhones.toSet().toList();
-          });
-        }
+                favorites = favoritedPhone;
+                myCart = addedToCartPhones.toSet().toList();
+              });
+            },
+          ),
+        ),
       ),
+
     );
   }
 }
