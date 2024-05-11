@@ -2,6 +2,7 @@
 
 import 'package:buoi4/page/admin/edit_upload_product_form.dart';
 import 'package:buoi4/page/admin/listproduct.dart';
+import 'package:buoi4/page/admin/revenue.dart';
 import 'package:flutter/material.dart';
 
 class HomeAdmin extends StatelessWidget {
@@ -68,8 +69,8 @@ class HomeAdmin extends StatelessWidget {
               title: 'Revenue',
               icon: Icons.attach_money,
               onTap: () {
-                // Xử lý chuyển hướng đến trang quản lý doanh thu
-                Navigator.pushNamed(context, '/revenue');
+                // Xử lý chuyển hướng đến trang quản lý đơn hàng
+              Navigator.pushNamed(context, RevenuePage.routeName);
               },
             ),
           ],

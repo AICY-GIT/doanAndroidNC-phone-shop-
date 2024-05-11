@@ -1,134 +1,136 @@
 import 'dart:io';
-import 'package:buoi4/page/admin/HomeAdmin.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:uuid/uuid.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class EditOrUploadProductScreen extends StatefulWidget {
-    static const routeName = '/edit';
+  static const routeName = '/edit';
 
-    const EditOrUploadProductScreen({Key? key}) : super(key: key);
+  const EditOrUploadProductScreen({Key? key}) : super(key: key);
 
-    @override
-    State<EditOrUploadProductScreen> createState() =>
-        _EditOrUploadProductScreenState();
+  @override
+  State<EditOrUploadProductScreen> createState() => _EditOrUploadProductScreenState();
 }
 
 class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
-    final _formKey = GlobalKey<FormState>();
-    XFile? _pickedImage;
-    String? _categoryValue;
-    String? _groupValue;
-    String? _sizeValue;
-    String? _colorValue;
+  final _formKey = GlobalKey<FormState>();
+  XFile? _pickedImage;
+  String? _categoryValue;
+  String? _groupValue;
+  String? _sizeValue;
+  String? _colorValue;
 
-    final TextEditingController _nameController = TextEditingController();
-    final TextEditingController _priceController = TextEditingController();
-    final TextEditingController _ratingController = TextEditingController();
-    final TextEditingController _batteryCapacityController = TextEditingController();
-    final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _ratingController = TextEditingController();
+  final TextEditingController _batteryCapacityController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _youtubeLinkController = TextEditingController();
 
-    bool _isLoading = false;
-    String? productImageUrl;
+  bool _isLoading = false;
+  String? productImageUrl;
 
-    // Khởi tạo Firebase Database Reference
-    final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
+  // Tạo một tham chiếu đến cơ sở dữ liệu Firebase Realtime
+  final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
 
-    Future<void> _pickImage() async {
-        final picker = ImagePicker();
-        final pickedImage = await picker.pickImage(source: ImageSource.gallery);
-        if (pickedImage != null) {
-            setState(() {
-                _pickedImage = pickedImage;
-            });
-        }
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        _pickedImage = pickedImage;
+      });
+    }
+  }
+
+  Future<void> _uploadProduct() async {
+    if (!_formKey.currentState!.validate() || _pickedImage == null) {
+      Fluttertoast.showToast(
+        msg: 'Please complete all fields and upload an image.',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+      return;
     }
 
-    Future<void> _uploadProduct() async {
-        final isValid = _formKey.currentState!.validate();
-        if (!isValid || _pickedImage == null) {
-            Fluttertoast.showToast(msg: 'Please complete all fields and upload an image.');
-            return;
-        }
+    setState(() {
+      _isLoading = true;
+    });
 
-        setState(() {
-            _isLoading = true;
-        });
+    try {
+      final productId = const Uuid().v4();
+      final storageRef = FirebaseStorage.instance.ref().child('productsImages').child('$productId.jpg');
+      await storageRef.putFile(File(_pickedImage!.path));
+      productImageUrl = await storageRef.getDownloadURL();
 
-        try {
-            final productId = const Uuid().v4();
-            final storageRef = FirebaseStorage.instance.ref().child('productsImages').child('$productId.jpg');
-            await storageRef.putFile(File(_pickedImage!.path));
-            productImageUrl = await storageRef.getDownloadURL();
+      String productGroupPath = _groupValue == 'Phone' ? 'phone' : 'earphone';
 
-            // Xác định nhóm và đường dẫn lưu trữ theo nhóm
-            String productGroupPath = _groupValue == 'Phone' ? 'phone' : 'earphone';
+      // Lưu sản phẩm vào Firebase Realtime Database
+      _databaseRef.child('products/$productGroupPath/$productId').set({
+        'productId': productId,
+        'phoneName': _nameController.text,
+        'price': int.parse(_priceController.text),
+        'size': _sizeValue,
+        'color': _colorValue,
+        'rating': double.parse(_ratingController.text),
+        'batteryCapacity': _batteryCapacityController.text,
+        'category': _categoryValue,
+        'description': _descriptionController.text,
+        'imageURL': productImageUrl,
+        'youtubeLink': _youtubeLinkController.text,
+        'createdAt': ServerValue.timestamp,
+      });
 
-            // Lưu dữ liệu vào Realtime Database
-            _databaseRef.child('products/$productGroupPath/$productId').set({
-                'productId': productId,
-                'phoneName': _nameController.text,
-                'price': int.parse(_priceController.text),
-                'size': _sizeValue,
-                'color': _colorValue,
-                'rating': double.parse(_ratingController.text),
-                'batteryCapacity': _batteryCapacityController.text,
-                'category': _categoryValue,
-                'description': _descriptionController.text,
-                'imageURL': productImageUrl,
-                'createdAt': ServerValue.timestamp,
-            });
+      Fluttertoast.showToast(
+        msg: 'Product has been added successfully',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
 
-            Fluttertoast.showToast(
-                msg: 'Product has been added successfully',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-            );
-                  Navigator.pushReplacementNamed(context, HomeAdmin.routeName);
-
-            _clearForm();
-        } catch (error) {
-            Fluttertoast.showToast(
-                msg: 'Error uploading product: $error',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-            );
-        } finally {
-            setState(() {
-                _isLoading = false;
-            });
-        }
+      _clearForm();
+    } catch (error) {
+      Fluttertoast.showToast(
+        msg: 'Error uploading product: $error',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
 
-    void _clearForm() {
-        _nameController.clear();
-        _priceController.clear();
-        _ratingController.clear();
-        _batteryCapacityController.clear();
-        _descriptionController.clear();
-        setState(() {
-            _pickedImage = null;
-            _categoryValue = null;
-            _groupValue = null;
-            _sizeValue = null;
-            _colorValue = null;
-        });
-    }
+  void _clearForm() {
+    _nameController.clear();
+    _priceController.clear();
+    _ratingController.clear();
+    _batteryCapacityController.clear();
+    _descriptionController.clear();
+    _youtubeLinkController.clear();
+    setState(() {
+      _pickedImage = null;
+      _categoryValue = null;
+      _groupValue = null;
+      _sizeValue = null;
+      _colorValue = null;
+    });
+  }
 
-    @override
-    void dispose() {
-        _nameController.dispose();
-        _priceController.dispose();
-        _ratingController.dispose();
-        _batteryCapacityController.dispose();
-        _descriptionController.dispose();
-        super.dispose();
-    }
-
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _priceController.dispose();
+    _ratingController.dispose();
+    _batteryCapacityController.dispose();
+    _descriptionController.dispose();
+    _youtubeLinkController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +139,7 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
         title: const Text('Edit or Upload Product'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0), // Đảm bảo cú pháp đúng
         child: Form(
           key: _formKey,
           child: Column(
@@ -190,12 +192,6 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                 onChanged: (value) {
                   setState(() {
                     _groupValue = value;
-                    // Thiết lập các danh mục dựa trên giá trị nhóm được chọn
-                    if (_groupValue == 'Phone') {
-                      _categoryValue = null;
-                    } else {
-                      _categoryValue = null;
-                    }
                   });
                 },
                 validator: (value) => value == null ? 'Please choose a group' : null,
@@ -279,33 +275,33 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                value: _sizeValue,
-                items: (_groupValue == 'Phone')
-                    ? ['256GB', '512GB', '1TB'].map((String size) {
-                      return DropdownMenuItem<String>(
-                        value: size,
-                        child: Text(size),
-                      );
-                    }).toList()
-                    : ['8h', '24h', '32h', '48h', '60h', '80h'].map((String size) {
-                      return DropdownMenuItem<String>(
-                        value: size,
-                        child: Text(size),
-                      );
-                    }).toList(),
-                decoration: InputDecoration(
-                  labelText: 'Size',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _sizeValue = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Please choose a size' : null,
-              ),
+                      value: _sizeValue,
+                      items: (_groupValue == 'Phone')
+                          ? ['256GB', '512GB', '1TB'].map((String size) {
+                            return DropdownMenuItem<String>(
+                              value: size,
+                              child: Text(size),
+                            );
+                          }).toList()
+                          : ['8h', '24h', '32h', '48h', '60h', '80h'].map((String size) {
+                            return DropdownMenuItem<String>(
+                              value: size,
+                              child: Text(size),
+                            );
+                          }).toList(),
+                      decoration: InputDecoration(
+                        labelText: 'Size',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _sizeValue = value;
+                        });
+                      },
+                      validator: (value) => value == null ? 'Please choose a size' : null,
+                    ),
                   ),
                 ],
               ),
@@ -317,7 +313,7 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       value: _colorValue,
-                      items: ['White', 'Blue', 'Red', 'Purple', 'Bran', 'Pink', 'Black'].map((String color) {
+                      items: ['White', 'Blue', 'Red', 'Purple', 'Brown', 'Pink', 'Black'].map((String color) {
                         return DropdownMenuItem<String>(
                           value: color,
                           child: Text(color),
@@ -408,6 +404,48 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+
+              // Ô nhập liên kết video YouTube
+              TextFormField(
+                controller: _youtubeLinkController,
+                decoration: InputDecoration(
+                  labelText: 'YouTube Video Link',
+                  hintText: 'Enter YouTube video link',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a YouTube video link';
+                  }
+                  // Kiểm tra tính hợp lệ của liên kết
+                  final isValidYouTubeLink = YoutubePlayer.convertUrlToId(value) != null;
+                  if (!isValidYouTubeLink) {
+                    return 'Please enter a valid YouTube video link';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Hiển thị video YouTube (nếu liên kết hợp lệ)
+              if (YoutubePlayer.convertUrlToId(_youtubeLinkController.text) != null)
+                Container(
+                  height: 200,
+                  width: double.infinity,
+                  child: YoutubePlayer(
+                    controller: YoutubePlayerController(
+                      initialVideoId: YoutubePlayer.convertUrlToId(_youtubeLinkController.text)!,
+                      flags: const YoutubePlayerFlags(
+                        autoPlay: false,
+                        mute: false,
+                      ),
+                    ),
+                    aspectRatio: 16 / 9,
+                  ),
+                ),
               const SizedBox(height: 16),
 
               // Nút lưu sản phẩm

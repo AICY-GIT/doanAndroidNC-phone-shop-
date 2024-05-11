@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class EditProductsScreen extends StatefulWidget {
     static const routeName = '/editproducts';
@@ -18,19 +19,20 @@ class EditProductsScreen extends StatefulWidget {
 }
 
 class _EditProductsScreenState extends State<EditProductsScreen> {
-    // Khởi tạo bộ điều khiển để quản lý đầu vào của người dùng
     final _formKey = GlobalKey<FormState>();
     late TextEditingController _nameController;
     late TextEditingController _priceController;
     late TextEditingController _ratingController;
     late TextEditingController _batteryCapacityController;
     late TextEditingController _descriptionController;
-    String? _groupValue;
+    late TextEditingController _youtubeLinkController; // Controller cho ô nhập liên kết video YouTube
 
-    late String _categoryValue;
-    late String _sizeValue;
-    late String _colorValue;
-    late String _imageURL;
+    late YoutubePlayerController _youtubePlayerController;
+    String? _groupValue;
+    String? _categoryValue;
+    String? _sizeValue;
+    String? _colorValue;
+    String? _imageURL;
     XFile? _pickedImage;
 
     @override
@@ -43,6 +45,7 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
         _ratingController = TextEditingController();
         _batteryCapacityController = TextEditingController();
         _descriptionController = TextEditingController();
+        _youtubeLinkController = TextEditingController(); // Controller cho ô nhập liên kết video YouTube
 
         // Lấy thông tin sản phẩm từ cơ sở dữ liệu
         final databaseRef = FirebaseDatabase.instance.ref().child('products/${widget.group}/${widget.productKey}');
@@ -58,17 +61,7 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
                 Navigator.pop(context); // Trở về trang trước
                 return;
             }
- // Log các thuộc tính của sản phẩm
-        print('Product data from Firebase Realtime Database:');
-        print('Name: ${productData['phoneName']}');
-        print('Price: ${productData['price']}');
-        print('Rating: ${productData['rating']}');
-        print('Battery Capacity: ${productData['batteryCapacity']}');
-        print('Description: ${productData['description']}');
-        print('Category: ${productData['category']}');
-        print('Size: ${productData['size']}');
-        print('Color: ${productData['color']}');
-        print('Image URL: ${productData['imageURL']}');
+
             // Điền thông tin sản phẩm vào các bộ điều khiển
             _nameController.text = productData['phoneName'] ?? '';
             _priceController.text = productData['price']?.toString() ?? '';
@@ -79,6 +72,18 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
             _sizeValue = productData['size'] ?? '';
             _colorValue = productData['color'] ?? '';
             _imageURL = productData['imageURL'] ?? '';
+            _youtubeLinkController.text = productData['youtubeLink'] ?? ''; // Đặt giá trị cho ô nhập liên kết video YouTube
+
+            // Khởi tạo YoutubePlayerController
+            final videoId = YoutubePlayer.convertUrlToId(_youtubeLinkController.text);
+            _youtubePlayerController = YoutubePlayerController(
+                initialVideoId: videoId ?? '',
+                flags: const YoutubePlayerFlags(
+                    autoPlay: false,
+                    mute: false,
+                ),
+            );
+
             // Cập nhật giao diện
             setState(() {});
         });
@@ -92,6 +97,8 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
         _ratingController.dispose();
         _batteryCapacityController.dispose();
         _descriptionController.dispose();
+        _youtubeLinkController.dispose();
+        _youtubePlayerController.dispose(); // Giải phóng bộ nhớ của controller YoutubePlayer
         super.dispose();
     }
 
@@ -131,6 +138,7 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
                     'category': _categoryValue,
                     'description': _descriptionController.text,
                     'imageURL': imageUrl ?? _imageURL, // Sử dụng imageUrl nếu có, nếu không sử dụng _imageURL hiện tại
+                    'youtubeLink': _youtubeLinkController.text,
                 });
 
                 Fluttertoast.showToast(
@@ -156,12 +164,6 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
         return Scaffold(
             appBar: AppBar(
                 title: const Text('Edit Product'),
-                actions: [
-                    IconButton(
-                        icon: const Icon(Icons.save),
-                        onPressed: _updateProduct,
-                    ),
-                ],
             ),
             body: _nameController.text.isEmpty
                 ? const Center(child: CircularProgressIndicator())
@@ -197,52 +199,20 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
                                                     ),
                                                 ),
                                             )
-                                        else if (_imageURL.isNotEmpty)
+                                        else if (_imageURL?.isNotEmpty ?? false)
                                             Padding(
                                                 padding: const EdgeInsets.only(left: 10),
                                                 child: SizedBox(
                                                     width: 150,
                                                     height: 100,
                                                     child: Image.network(
-                                                        _imageURL,
+                                                        _imageURL ?? '',
                                                         fit: BoxFit.cover,
                                                     ),
                                                 ),
                                             ),
                                     ],
                                 ),
-                                const SizedBox(height: 16),
-
-                                // Trường chọn nhóm sản phẩm
-                               DropdownButtonFormField<String>(
-    value: _categoryValue,
-    items: (widget.group == 'phone')
-        ? ['Apple', 'Oppo', 'Samsung', 'Nokia', 'Xiaomi'].map((String category) {
-            return DropdownMenuItem<String>(
-                value: category,
-                child: Text(category),
-            );
-        }).toList()
-        : ['Apple', 'JBL', 'Sony', 'Sennheiser'].map((String category) {
-            return DropdownMenuItem<String>(
-                value: category,
-                child: Text(category),
-            );
-        }).toList(),
-    decoration: InputDecoration(
-        labelText: 'Category',
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-        ),
-    ),
-    onChanged: (value) {
-        setState(() {
-            _categoryValue = value!;
-        });
-    },
-    validator: (value) => value == null ? 'Please choose a category' : null,
-),
-
                                 const SizedBox(height: 16),
 
                                 // Ô nhập tên sản phẩm
@@ -290,34 +260,34 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
                                         ),
                                         const SizedBox(width: 10),
                                         Expanded(
-                                            child:  DropdownButtonFormField<String>(
-    value: _sizeValue,
-    items: (widget.group == 'phone')
-        ? ['256GB', '512GB', '1TB'].map((String size) {
-            return DropdownMenuItem<String>(
-                value: size,
-                child: Text(size),
-            );
-        }).toList()
-        : ['8h', '24h', '32h', '48h', '60h', '80h'].map((String size) {
-            return DropdownMenuItem<String>(
-                value: size,
-                child: Text(size),
-            );
-        }).toList(),
-    decoration: InputDecoration(
-        labelText: 'Size',
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-        ),
-    ),
-    onChanged: (value) {
-        setState(() {
-            _sizeValue = value!;
-        });
-    },
-    validator: (value) => value == null ? 'Please choose a size' : null,
-),
+                                            child: DropdownButtonFormField<String>(
+                                                value: _sizeValue,
+                                                items: (widget.group == 'phone')
+                                                    ? ['256GB', '512GB', '1TB'].map((String size) {
+                                                        return DropdownMenuItem<String>(
+                                                            value: size,
+                                                            child: Text(size),
+                                                        );
+                                                    }).toList()
+                                                    : ['8h', '24h', '32h', '48h', '60h', '80h'].map((String size) {
+                                                        return DropdownMenuItem<String>(
+                                                            value: size,
+                                                            child: Text(size),
+                                                        );
+                                                    }).toList(),
+                                                decoration: InputDecoration(
+                                                    labelText: 'Size',
+                                                    border: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                ),
+                                                onChanged: (value) {
+                                                    setState(() {
+                                                        _sizeValue = value!;
+                                                    });
+                                                },
+                                                validator: (value) => value == null ? 'Please choose a size' : null,
+                                            ),
                                         ),
                                     ],
                                 ),
@@ -329,7 +299,7 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
                                         Expanded(
                                             child: DropdownButtonFormField<String>(
                                                 value: _colorValue,
-                                                items: ['Trắng', 'Xanh', 'Đỏ', 'Tím', 'Cam', 'Hồng', 'Đen'].map((color) {
+                                                items: ['White', 'Blue', 'Red', 'Purple', 'Orange', 'Pink', 'Black'].map((color) {
                                                     return DropdownMenuItem<String>(
                                                         value: color,
                                                         child: Text(color),
@@ -422,26 +392,55 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Row(
-                                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                //     children: [
-                                //         ElevatedButton(
-                                //             onPressed: _updateProduct,
-                                //             child: const Text('Save Product'),
-                                //         ),
-                                //         OutlinedButton(
-                                //             onPressed: () {
-                                //                 Navigator.pop(context);
-                                //             },
-                                //             child: const Text('Cancel'),
-                                //         ),
-                                //     ],
-                                // ),
+                                // Ô nhập liên kết video YouTube
+                                TextFormField(
+                                    controller: _youtubeLinkController,
+                                    decoration: InputDecoration(
+                                        labelText: 'YouTube Video Link',
+                                        hintText: 'Enter YouTube video link',
+                                        border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                        ),
+                                    ),
+                                    validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                            return 'Please enter a YouTube video link';
+                                        }
+                                        final videoId = YoutubePlayer.convertUrlToId(value);
+                                        if (videoId == null) {
+                                            return 'Please enter a valid YouTube video link';
+                                        }
+                                        return null;
+                                    },
+                                    onChanged: (value) {
+                                        setState(() {
+                                            final videoId = YoutubePlayer.convertUrlToId(value);
+                                            if (videoId != null) {
+                                                _youtubePlayerController.load(videoId);
+                                            }
+                                        });
+                                    },
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Hiển thị video YouTube (nếu liên kết hợp lệ)
+                                YoutubePlayer(
+                                    controller: _youtubePlayerController,
+                                    aspectRatio: 16 / 9,
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Nút lưu sản phẩm
+                                Center(
+                                    child: ElevatedButton(
+                                        onPressed: _updateProduct,
+                                        child: const Text('Save Product'),
+                                    ),
+                                ),
                             ],
                         ),
                     ),
                 ),
-            
         );
     }
 }

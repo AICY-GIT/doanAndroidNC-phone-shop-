@@ -5,6 +5,7 @@ import 'package:buoi4/page/admin/edit_upload_product_form.dart';
 import 'package:buoi4/page/admin/editproducts.dart';
 import 'package:buoi4/page/admin/listproduct.dart';
 import 'package:buoi4/page/admin/oders_admin.dart';
+import 'package:buoi4/page/admin/revenue.dart';
 import 'package:buoi4/page/homewidget.dart';
 import 'package:buoi4/page/product/checkout.dart';
 import 'package:buoi4/page/product/odersstatus.dart';
@@ -50,6 +51,7 @@ class MyApp extends StatelessWidget {
 
                  RootPage.routeName:(context) => RootPage(),
                 OrdersAdminPage.routeName: (context) => const OrdersAdminPage(),
+                RevenuePage.routeName: (context) =>  RevenuePage(),
 
 
 

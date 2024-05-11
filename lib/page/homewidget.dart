@@ -154,14 +154,15 @@ return GestureDetector(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                     Image.network(
-                                        imageUrl,
-                                        width: double.infinity,
-                                        height: 100,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                            return const Icon(Icons.error);
-                                        },
-                                    ),
+    imageUrl,
+    width: double.infinity,
+    height: 100,
+    fit: BoxFit.contain, // Thay đổi thuộc tính fit thành BoxFit.contain
+    errorBuilder: (context, error, stackTrace) {
+        return const Icon(Icons.error);
+    },
+),
+
                                     Padding(
                                         padding: const EdgeInsets.all(8),
                                         child: Column(
