@@ -1,3 +1,3 @@
 a basic app for selling mobile phone
-
-noted:doesnt have banking and order tracking
+having all the CURD basic feture
+noted:banking and tracking order is bugged right now 
